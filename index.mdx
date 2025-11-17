@@ -1,97 +1,149 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Convert Text to Speech Using Waves API"
+
+description: "This guide will walk you through how to convert text into hyper-realistic speech using the Waves TTS API. By the end of this, you will be able to convert text into speech using the Waves API."
 ---
 
-## Setting up
+## 1. Introduction
 
-Get your documentation site up and running in minutes.
+This guide covers the standard API call for **Waves Text-to-Speech (TTS),**  where the user will receive the audio output of the text. Choose a voice, send text, and receive audio in formats like WAV, MP3, PCM, or MULAW.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+## 2. Basic Requirements
+Before you begin, ensure you have the following:
 
-## Make it yours
+* Python (3.9 or higher) is installed on your machine.
 
-Design a docs site that looks great and empowers your users.
+* An API key from the Smallest AI platform (sign up [**here**](https://waves.smallest.ai/)).
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+## 3. Set Up The API Key
 
-## Create beautiful pages
+After obtaining the **API KEY** from **Smallest AI** platform Store this key securely as an environment variable named `SMALLEST_API_KEY`. This is a security best practice and prevents you from hardcoding secrets in your code.
 
-Everything you need to create world-class documentation.
+<Tabs>
+  <Tab title="macOS / Linux">
+    ```bash
+    export SMALLEST_API_KEY="YOUR_API_KEY_HERE"
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    $Env:SMALLEST_API_KEY = "YOUR_API_KEY_HERE"
+    ```
+  </Tab>
+</Tabs>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## 4. Endpoint
 
-## Need inspiration?
+To generate speech, you will make a `POST` request to the `get_speech` endpoint.
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+*   **Method:** `POST`
+*   **URL:** `https://waves-api.smallest.ai/api/v1/lightning-large/get_speech`
+
+## 5. Basic Required Headers
+
+You must include two headers to authenticate your request and define the data you are sending.
+
+*   `Authorization: Bearer YOUR_API_KEY`
+*   `Content-Type: application/json`
+
+<Warning>
+**Secure Your API Key!**
+
+Get your key from the Waves dashboard.Never hardcode it in your code. The best practice is to store it as an environment variable (e.g., `SMALLEST_API_KEY`) and have your code read it from there.
+</Warning>
+
+
+## 6. Sample Request
+
+Here are examples in Python, JavaScript, and cURL. **Our Python SDK** is the recommended method as it automatically handles loading your environment variable.
+
+<Tabs>
+  <Tab title="Python (SDK)">
+    This example uses our official Python SDK (`pip install smallestai`).
+
+    ```python
+    from smallestai.waves import WavesClient
+
+    def main():
+        client = WavesClient(api_key=os.getenv("SMALLEST_API_KEY"))
+        audio = client.synthesize(
+            "Hello, this is a test for sync synthesis function.",
+        )
+        with open("output.wav", "wb") as f:
+            f.write(audio)
+    if __name__ == "__main__":
+        main()
+    ```
+  </Tab>
+  <Tab title="Node.js / JavaScript">
+    This example uses the native `fetch` client to call the API directly.
+
+    ```javascript
+    import fs from 'fs';
+    import path from 'path';
+
+    async function generateSpeech() {
+      const API_KEY = process.env.SMALLEST_API_KEY;
+      if (!API_KEY) {
+        throw new Error("SMALLEST_API_KEY environment variable not set.");
+      }
+      
+        const url = 'https://waves-api.smallest.ai/api/v1/lightning-large/get_speech'; 
+        const options = {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: "Hello from Smallest AI. This is my first audio file!",
+          voice_id: "aditi",
+        })
+      };
+
+      try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+
+        const audioBuffer = Buffer.from(await response.arrayBuffer());
+        fs.writeFileSync('output.wav', audioBuffer);
+
+        console.log("Success! Audio saved to output.wav");
+
+      } catch (err) {
+        console.error("Error generating speech:", err);
+      }
+    }
+
+    generateSpeech();
+    ```
+  </Tab>
+  <Tab title="cURL">
+    This `cURL` command calls the API and saves the raw audio output to `output.wav`.
+
+    ```bash
+    curl --request POST \
+      --url 'https://waves-api.smallest.ai/api/v1/lightning-large/get_speech' \
+      --header "Authorization: Bearer $SMALLEST_API_KEY" \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "text": "Hello from Smallest AI. This is my first audio file!",
+        "voice_id": "aditi"
+      }' \
+      --output output.wav
+    ```
+  </Tab>
+</Tabs>
+
+## 7. Sample Response
+
+If your request is successful, the API will return a `200 OK` status and you can the raw audio data output (eg `.wav`,`.mp3` etc). In above code it is `output.wav`.
+
+## 8. Usage Tip
+<Info>
+**Tip: Using a Cloned Voice?**
+
+When making a TTS request, you must specify a `voice_id`. If you are using a voice ID that corresponds to a **cloned voice**, you *must* also explicitly set the `model` parameter to `"lightning-large"` in your API call.
+</Info>
